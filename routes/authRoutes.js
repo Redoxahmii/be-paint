@@ -34,7 +34,7 @@ router.post("/payment", async (req, res) => {
       line_items: lineItems,
       mode: "payment",
       shipping_address_collection: {
-        allowed_countries: ["IN", "US", "CA"],
+        allowed_countries: ["IN", "US", "CA", "UK"],
       },
       success_url: successUrl,
       cancel_url: `${process.env.ORIGIN}/cancel`,
