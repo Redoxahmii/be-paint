@@ -9,6 +9,8 @@ const { v4: uuidv4 } = require("uuid");
 require("dotenv").config();
 const stripe = Stripe(process.env.STRIPE_KEY);
 const router = express.Router();
+const fetch = require("node-fetch");
+var Mixpanel = require("mixpanel");
 
 router.post("/payment", async (req, res) => {
   const { warranty, images, price, couponCode, mysteryPaintKit } = req.body;
@@ -119,6 +121,9 @@ router.post("/popup-generate", async (req, res) => {
     // Create a new user if they do not exist, or update the existing user
     if (!user) {
       user = new User({ email, name, phone, couponCode: [savedCoupon._id] });
+      // Send to Klaviyo
+      sendDataToKlaviyo(email, name, phone);
+      sendDataToMixpanel(email, name, phone)
     } else {
       if (phone && !user.phone) {
         user.phone = phone;
@@ -172,5 +177,55 @@ router.get("/random", async (_req, res) => {
     res.status(400).json({ error: error.message });
   }
 });
+
+const sendDataToKlaviyo = async (email, name, phone) => {
+  const tokens = name.split(" ");
+  if (tokens.length == 2) {
+    first_name = tokens[0];
+    last_name = tokens[1];
+  } else {
+    first_name = tokens[0];
+    last_name = "N/A";
+  }
+
+  const url = "https://a.klaviyo.com/api/profiles/";
+  const options = {
+    method: "POST",
+    headers: {
+      accept: "application/json",
+      revision: "2024-06-15",
+      "content-type": "application/json",
+      Authorization: `Klaviyo-API-Key ${process.env.KLAVIYO_KEY}`,
+    },
+    body: JSON.stringify({
+      data: {
+        type: "profile",
+        attributes: {
+          email: email,
+          phone_number: phone,
+          first_name: first_name,
+          last_name: last_name,
+        },
+      },
+    }),
+  };
+
+  fetch(url, options)
+    .then((res) => res.json())
+    .then((json) => console.log(json))
+    .catch((err) => console.error("error:" + err));
+};
+
+const sendDataToMixpanel = async (email, name, phone) => {
+  // TODO
+  const mixpanel = Mixpanel.init("3c06c85ca82cefa8cf12662e1aafe49a");
+  mixpanel.people.set(email, {
+    $name: name,
+    $email: email,
+    phone: phone
+    
+    // Add anything else about the user here
+  });
+};
 
 module.exports = router;
