@@ -36,7 +36,7 @@ router.post("/payment", async (req, res) => {
       line_items: lineItems,
       mode: "payment",
       shipping_address_collection: {
-        allowed_countries: ["IN", "US", "CA", "UK"],
+        allowed_countries: ["IN", "US", "CA"],
       },
       success_url: successUrl,
       cancel_url: `${process.env.ORIGIN}/cancel`,
@@ -123,7 +123,7 @@ router.post("/popup-generate", async (req, res) => {
       user = new User({ email, name, phone, couponCode: [savedCoupon._id] });
       // Send to Klaviyo
       sendDataToKlaviyo(email, name, phone);
-      sendDataToMixpanel(email, name, phone)
+      sendDataToMixpanel(email, name, phone);
     } else {
       if (phone && !user.phone) {
         user.phone = phone;
@@ -222,8 +222,8 @@ const sendDataToMixpanel = async (email, name, phone) => {
   mixpanel.people.set(email, {
     $name: name,
     $email: email,
-    phone: phone
-    
+    phone: phone,
+
     // Add anything else about the user here
   });
 };
