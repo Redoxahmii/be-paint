@@ -37,7 +37,7 @@ router.post("/imgtoimg", async (req, res) => {
         data: {
           prompt: prompt,
           aspect_ratio: "",
-          process_mode: "relax",
+          process_mode: "turbo",
           webhook_endpoint: "",
           webhook_secret: "",
         },
@@ -116,7 +116,7 @@ router.post("/multi", async (req, res) => {
         data: {
           prompt: prompt,
           aspect_ratio: "",
-          process_mode: "relax",
+          process_mode: "turbo",
           webhook_endpoint: "",
           webhook_secret: "",
         },
