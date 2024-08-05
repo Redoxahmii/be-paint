@@ -57,7 +57,7 @@ router.post("/payment", async (req, res) => {
       })),
       sessionId: session.id,
       lineItems: lineItems,
-      delivery_status: "Expected",
+      delivery_status: "Under Review",
     });
     await order.save();
 
