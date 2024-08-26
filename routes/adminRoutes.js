@@ -1,5 +1,4 @@
 const express = require("express");
-const User = require("../models/user");
 const Stripe = require("stripe");
 const Order = require("../models/order");
 require("dotenv").config();
@@ -7,27 +6,60 @@ require("dotenv").config();
 const stripe = Stripe(process.env.STRIPE_KEY);
 const router = express.Router();
 
+/**  INFO: in memory cache for sessions */
+
+let sessionsCache = {
+  ordersCount: 0,
+  sessions: {},
+};
+
 router.get("/all-orders", async (_req, res) => {
   try {
     const orders = await Order.find();
-    for (const order of orders) {
-      try {
-        const session = await stripe.checkout.sessions.retrieve(
-          order.sessionId,
-        );
-        order.shipping = session;
-        await order.save();
-      } catch (error) {
-        console.error("Error retrieving session:", error.message);
+    const currentOrdersCount = orders.length;
+    if (currentOrdersCount > sessionsCache.ordersCount) {
+      sessionsCache.ordersCount = currentOrdersCount;
+      for (const order of orders) {
+        if (!sessionsCache.sessions[order.sessionId]) {
+          try {
+            const session = await stripe.checkout.sessions.retrieve(
+              order.sessionId,
+            );
+            order.shipping = session;
+            await order.save();
+
+            sessionsCache.sessions[order.sessionId] = session;
+          } catch (error) {
+            console.error("Error retrieving session:", error.message);
+          }
+        } else {
+          order.shipping = sessionsCache.sessions[order.sessionId];
+        }
+      }
+    } else {
+      for (const order of orders) {
+        if (sessionsCache.sessions[order.sessionId]) {
+          order.shipping = sessionsCache.sessions[order.sessionId];
+        }
       }
     }
+
     res.json(orders);
   } catch (error) {
     console.error(error.message);
     res.status(500).send("Server error");
   }
 });
-
+router.get("/retrieve-order", async (req, res) => {
+  try {
+    const orderId = req.query.orderId;
+    const session = await stripe.checkout.sessions.retrieve(orderId);
+    res.json(session);
+  } catch (error) {
+    console.error("Error retrieving order:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
 router.get("/orderInfo", async (_req, res) => {
   try {
     const orders = await Order.find();
@@ -37,19 +69,23 @@ router.get("/orderInfo", async (_req, res) => {
     let unpaidCount = 0;
 
     orders.forEach((order) => {
-      totalAmount += order.shipping.amount_total;
+      const amountTotal = order.shipping?.amount_total || 0;
+      totalAmount += amountTotal;
 
-      order.lineItems.forEach((item) => {
-        totalItemCount += parseInt(item.quantity);
-      });
+      if (Array.isArray(order.lineItems)) {
+        order.lineItems.forEach((item) => {
+          totalItemCount += parseInt(item.quantity, 10);
+        });
+      }
 
-      const paymentStatus = order.shipping.payment_status;
+      const paymentStatus = order.shipping?.payment_status;
       if (paymentStatus === "paid") {
         paidCount++;
       } else if (paymentStatus === "unpaid") {
         unpaidCount++;
       }
     });
+
     const response = {
       totalAmount,
       totalItemCount,
@@ -58,13 +94,13 @@ router.get("/orderInfo", async (_req, res) => {
         unpaid: unpaidCount,
       },
     };
+
     res.json(response);
   } catch (error) {
     console.error(error.message);
     res.status(500).send("Server error");
   }
 });
-
 /**
  * @classdesc [INFO: Update Status of Order]
  */

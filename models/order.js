@@ -17,7 +17,8 @@ const orderSchema = new mongoose.Schema({
   warranty: { type: Boolean, required: true },
   images: [imageSchema],
   sessionId: { type: String, required: true },
-  lineItems: { type: Object, required: true }, // Keep it simple as it’s managed by Stripe
+  lineItems: { type: Object, required: true },
+  shipping: { type: Object },
   delivery_status: { type: String, required: true },
 });
 
