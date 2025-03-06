@@ -5,6 +5,8 @@ const convertDimensions = require("../utils/convertDimensions");
 const router = express.Router();
 const token = process.env.X_API_KEY || null;
 
+//  NOTE:
+// Due to trademark considerations, we will discontinue our API service at midjourneyapi.xyz at 00:00(UTC) Feburary 15th 2025. To ensure uninterrupted service, please update your API endpoint from api.midjourneyapi.xyz to api.goapi.ai or any other official domain listed in our documentation at goapi.ai/docs/overview#goapi-domains. No other changes to your code are required – simply update the domain name in your API endpoints to continue using our service without interruption. For a seamless transition, we recommend making this change as soon as possible.
 router.post("/imgtoimg", async (req, res) => {
   try {
     const body = req.body;
@@ -41,7 +43,7 @@ router.post("/imgtoimg", async (req, res) => {
           webhook_endpoint: "",
           webhook_secret: "",
         },
-        url: "https://api.midjourneyapi.xyz/mj/v2/imagine",
+        url: "https://api.goapi.ai/mj/v2/imagine",
         method: "post",
       };
       const editResponse = await axios(editConfig);
@@ -59,7 +61,7 @@ router.post("/imgtoimg", async (req, res) => {
           webhook_endpoint: "",
           webhook_secret: "",
         },
-        url: "https://api.midjourneyapi.xyz/mj/v2/upscale",
+        url: "https://api.goapi.ai/mj/v2/upscale",
         method: "post",
       };
       const upscaleResponse = await axios(upscaleConfig);
@@ -120,7 +122,7 @@ router.post("/multi", async (req, res) => {
           webhook_endpoint: "",
           webhook_secret: "",
         },
-        url: "https://api.midjourneyapi.xyz/mj/v2/imagine",
+        url: "https://api.goapi.ai/mj/v2/imagine",
         method: "post",
       };
       const editResponse = await axios(editConfig);
@@ -138,7 +140,7 @@ router.post("/multi", async (req, res) => {
           webhook_endpoint: "",
           webhook_secret: "",
         },
-        url: "https://api.midjourneyapi.xyz/mj/v2/upscale",
+        url: "https://api.goapi.ai/mj/v2/upscale",
         method: "post",
       };
       const upscaleResponse = await axios(upscaleConfig);
